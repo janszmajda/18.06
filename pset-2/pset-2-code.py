@@ -5,6 +5,7 @@
 
 ## Question 1 (20 points)
 import numpy as np
+from math import lcm
 
 def build_matrix() -> np.ndarray:
     return np.array(
@@ -73,6 +74,47 @@ def first_k_meeting_threshold(rows: list[dict[str, float]], field: str, threshol
             return int(row["k"])
     return None
 
+def permutation_from_cycles(n: int, cycles: list[list[int]]) -> np.ndarray:
+    perm = np.arange(n, dtype=int)
+    seen: set[int] = set()
+
+    for cycle in cycles:
+        if len(cycle) == 0:
+            continue
+        for idx in cycle:
+            if idx < 0 or idx >= n:
+                raise ValueError("Cycle index out of range.")
+            if idx in seen:
+                raise ValueError("Cycles must be disjoint.")
+            seen.add(idx)
+        for i in range(len(cycle)):
+            perm[cycle[i]] = cycle[(i + 1) % len(cycle)]
+
+    return perm
+
+def permutation_matrix_from_vector(perm: np.ndarray) -> np.ndarray:
+    n = perm.size
+    P = np.zeros((n, n), dtype=int)
+    # P e_j = e_{perm[j]}
+    P[perm, np.arange(n)] = 1
+    return P
+
+def permutation_order_from_cycles(cycles: list[list[int]]) -> int:
+    order = 1
+    for cycle in cycles:
+        order = lcm(order, max(1, len(cycle)))
+    return order
+
+def verified_matrix_order(P: np.ndarray, max_k: int) -> int | None:
+    n = P.shape[0]
+    I = np.eye(n, dtype=int)
+    power = np.eye(n, dtype=int)
+    for k in range(1, max_k + 1):
+        power = power @ P
+        if np.array_equal(power, I):
+            return k
+    return None
+
 def main() -> None:
     np.set_printoptions(precision=8, suppress=True)
 
@@ -137,6 +179,36 @@ def main() -> None:
     print("- Around k = 8 the inverse is stable to about 0.01 entrywise.")
     print("- Since cond(A) is large, 3 significant figures in A are not enough.")
     print("- Use about 7-8 significant figures in A for a reliably stable inverse.")
+
+    print("\n" + "=" * 72)
+    print("QUESTION 2: PERMUTATION MATRIX WITH ORDER > n^2")
+    print("=" * 72)
+
+    n = 20
+    # Disjoint cycles on {0, 1, ..., 19} with lengths 7, 5, 4, 3, 1.
+    cycles = [
+        [0, 1, 2, 3, 4, 5, 6],          # length 7
+        [7, 8, 9, 10, 11],              # length 5
+        [12, 13, 14, 15],               # length 4
+        [16, 17, 18],                   # length 3
+        [19],                           # length 1 (fixed point)
+    ]
+
+    perm = permutation_from_cycles(n, cycles)
+    P = permutation_matrix_from_vector(perm)
+
+    theoretical_order = permutation_order_from_cycles(cycles)
+    checked_order = verified_matrix_order(P, max_k=theoretical_order)
+
+    print(f"Chosen n = {n}")
+    print("Cycle lengths = [7, 5, 4, 3, 1]")
+    print(f"Theoretical order(P) = lcm(7, 5, 4, 3, 1) = {theoretical_order}")
+    print(f"n^2 = {n**2}")
+    print(f"order(P) > n^2 ? {theoretical_order > n**2}")
+    print(f"Verified smallest k with P^k = I (checked by multiplication): {checked_order}")
+
+    print("\nPermutation matrix P (0/1 entries):")
+    print(P)
 
 if __name__ == "__main__":
     main()
