@@ -3,7 +3,6 @@
 # Name: Jan Szmajda
 # Collaborators: Codex 5.3
 
-## Question 1 (20 points)
 import numpy as np
 from math import lcm
 
