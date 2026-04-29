@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python pset-8-code.py)",
+      "Bash(python3 pset-8-code.py)"
+    ]
+  }
+}
